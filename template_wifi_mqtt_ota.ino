@@ -25,9 +25,6 @@
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
 
-
-
-
 /************************ Define device and mqtt topic and things ********/
 
 String NodeID = "device_name_goes_here";    // Define the device name (used in mqtt pub)
@@ -40,12 +37,11 @@ String NodeID = "device_name_goes_here";    // Define the device name (used in m
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 
-
 /************************* WiFi and MQTT variables ***************************/
 
-const char* ssid = "kenmar";
-const char* password = "C0urtney1";
-const char* mqtt_server = "172.16.20.10";
+const char* ssid = "your_ssid_here";
+const char* password = "your_wifi_password_here";
+const char* mqtt_server = "your_mqtt_server_IP_here";
 
 String pubTopic="home/"+NodeID+"/values";
 
@@ -94,7 +90,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 
-/************************* Function to read the CT *************************/
+/************************* Function to read the sensor *************************/
 void read_sensor()
 {
   float value1;         // Placeholders for the mqtt code below..
