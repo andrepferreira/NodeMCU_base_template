@@ -5,4 +5,4 @@ A firmware template for the NodeMCU (ESP8266) microcontroller
 - Wi-Fi connection
 - MQTT connection
 - OTA Updates
-- Generic sensor read and publish
+- Generic sensor read and publish (in JSON format)
