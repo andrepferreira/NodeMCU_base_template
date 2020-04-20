@@ -115,6 +115,7 @@ void setup()
 
 #ifdef WIFI
   // Setup the Wifi connection
+  WiFi.mode(WIFI_STA);    // Ensure we are in Station mode
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
