@@ -1,4 +1,3 @@
-
 /*****************************************************************************
  * Template to be used as base of further programming. You need to:
  * 
@@ -11,7 +10,7 @@
  * Optional MQTT server via #define
  * 
  * Author: Andre Ferreira
- * Date: 19 May 2020
+ * Date: 11 June 2020
  * Built for the ESP8266 based devices
  * 
  *****************************************************************************/
@@ -55,14 +54,47 @@ String statusTopic="home/deviceStatus";         // Default device status message
 
 int period = 2000;                   // Time to sleep for between readings (ms)
 unsigned long time_now = 0;
-char payload [128];                  // json output for the mqtt pub
+char payload [512];                  // json output for the mqtt pub
 
+float rssi;                           // Store Wi-Fi RSSI
+float rssi_percent;                   // Store RSSI as a percentage
+String bssid;                         // Store BSSID
+String ip_addr;                       // Store IP
 
+/************************* Function to get Wi-Fi stats *************************/
+
+void get_wifi_stats() {
+
+  //Get RSSI
+  rssi = WiFi.RSSI();
+
+  // Convert RSSI to percent
+  rssi_percent = isnan(rssi) ? -100.0 : rssi;
+  rssi_percent = min(max(2 * (rssi + 100.0), 0.0), 100.0);
+
+  // Get Base Station MAC
+  bssid = WiFi.BSSIDstr();
+
+  // Get IP addr
+  ip_addr = WiFi.localIP().toString();
+
+  
+  Serial.print("IP address: ");
+  Serial.println(ip_addr);
+
+  Serial.print("RSSI: ");
+  Serial.println(rssi);
+  Serial.print("RSSI %: ");
+  Serial.println(rssi_percent);
+  Serial.print("BSSID: ");
+  Serial.println(bssid);
+
+}
 
 /************************* Function to connect to MQTT *************************/
 
 void mqtt_reconnect() {
-  char statPayload[128];
+  char statPayload[512];
   
   // Loop until we're reconnected
   while (!mqttClient.connected()) {
@@ -72,8 +104,8 @@ void mqtt_reconnect() {
     if (mqttClient.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      snprintf(statPayload, sizeof(statPayload), "{\"%s\":{\"DeviceType\":\"%s\",\"status\":{\"%s\":\"%s\"}}}", NodeID.c_str(), DeviceType.c_str(), "MQTT", "Connected" ); 
-      mqttClient.publish(statusTopic.c_str(), statPayload);
+         snprintf(statPayload, sizeof(statPayload), "{\"%s\":{\"DeviceType\":\"%s\", \"IPAddr\":\"%s\", \"BSSID\":\"%s\", \"RSSI\":\"%.1f\", \"RSSIP\":\"%.1f\" \"status\":{\"%s\":\"%s\"}}}", NodeID.c_str(), DeviceType.c_str(), ip_addr.c_str(), bssid.c_str(), rssi, rssi_percent, "MQTT", "Connected" ); 
+         mqttClient.publish(statusTopic.c_str(), statPayload);
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqttClient.state());
@@ -108,7 +140,7 @@ void read_sensor()
   // Do some clever stuff here
 
 #ifdef MQTT
-  snprintf(payload, sizeof(payload), "{\"%s\":{\"DeviceType\":\"%s\",\"status\":{\"%s\":\"%.2f\",\"%s\":\"%.2f\"}}}", NodeID.c_str(), DeviceType.c_str(),"val1", value1, "val2", value2 );
+  snprintf(payload, sizeof(payload), "{\"%s\": {\"DeviceType\":\"%s\", \"IPAddr\":\"%s\", \"BSSID\":\"%s\", \"RSSI\":\"%.1f\", \"RSSIP\":\"%.1f\", \"status\":{\"%s\":\"%.2f\"}}}", NodeID.c_str(), DeviceType.c_str(), ip_addr.c_str(), bssid.c_str(), rssi, rssi_percent, "temp", celcius);
   Serial.println (payload);
   Serial.println (pubTopic);
   mqttClient.publish(pubTopic.c_str(), payload);
@@ -125,6 +157,7 @@ void setup()
 #ifdef WIFI
   // Setup the Wifi connection
   WiFi.mode(WIFI_STA);    // Ensure we are in Station mode
+  WiFi.hostname(NodeID);  // Set the device network name
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -132,9 +165,10 @@ void setup()
     Serial.print(".");
   }
 
+  get_wifi_stats();              // Get Wi-Fi stats and store values
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(ip_addr);
 #endif
 
 #ifdef MQTT
@@ -217,6 +251,7 @@ void loop() {
   // Loop for rest of time
   if(millis() - time_now > period){   // Workaround for overflow of timer
         time_now += period;
+        get_wifi_stats();              // Get Wi-Fi stats and store values
         read_sensor();                 // Read the sensor values
     }
 }
