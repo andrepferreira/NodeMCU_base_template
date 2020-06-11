@@ -251,7 +251,9 @@ void loop() {
   // Loop for rest of time
   if(millis() - time_now > period){   // Workaround for overflow of timer
         time_now += period;
+#ifdef WIFI
         get_wifi_stats();              // Get Wi-Fi stats and store values
+#endif
         read_sensor();                 // Read the sensor values
     }
 }
