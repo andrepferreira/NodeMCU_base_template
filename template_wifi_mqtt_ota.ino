@@ -43,9 +43,9 @@ PubSubClient mqttClient(wifiClient);
 
 /************************* WiFi and MQTT variables ***************************/
 
-const char* ssid = "kenmar";
-const char* password = "C0urtney1";
-const char* mqtt_server = "172.16.20.10";
+const char* ssid = "wifi_ssid_here";
+const char* password = "wifi_password_here";
+const char* mqtt_server = "MQTT_server_IP_here";
 
 String pubTopic="home/"+NodeID+"/values";       // Default data topic for sensor values
 String statusTopic="home/deviceStatus";         // Default device status messages topic
@@ -140,7 +140,7 @@ void read_sensor()
   // Do some clever stuff here
 
 #ifdef MQTT
-  snprintf(payload, sizeof(payload), "{\"%s\": {\"DeviceType\":\"%s\", \"IPAddr\":\"%s\", \"BSSID\":\"%s\", \"RSSI\":\"%.1f\", \"RSSIP\":\"%.1f\", \"status\":{\"%s\":\"%.2f\"}}}", NodeID.c_str(), DeviceType.c_str(), ip_addr.c_str(), bssid.c_str(), rssi, rssi_percent, "temp", celcius);
+  snprintf(payload, sizeof(payload), "{\"%s\": {\"DeviceType\":\"%s\", \"IPAddr\":\"%s\", \"BSSID\":\"%s\", \"RSSI\":\"%.1f\", \"RSSIP\":\"%.1f\", \"status\":{\"%s\":\"%.2f\", \"%s\":\"%.2f\"}}}", NodeID.c_str(), DeviceType.c_str(), ip_addr.c_str(), bssid.c_str(), rssi, rssi_percent, "value1", value1, "value2", value2);
   Serial.println (payload);
   Serial.println (pubTopic);
   mqttClient.publish(pubTopic.c_str(), payload);
